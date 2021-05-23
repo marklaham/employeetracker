@@ -26,7 +26,8 @@ const promptUser = () => {
         "VIEW DEPARTMENTS",
         "VIEW EMPLOYEE ROLES",
         "VIEW EMPLOYEES",
-        "UPDATE AN EXISTING EMPLOYEE"],
+        "UPDATE AN EXISTING EMPLOYEE",
+        "Exit"],
     },
   ])
   .then((response) => {
@@ -52,6 +53,8 @@ const promptUser = () => {
       case "UPDATE AN EXISTING EMPLOYEE":
         updateEmployee();
         break;
+      case "EXIT":
+          break;
     }
   })
 }
@@ -60,7 +63,17 @@ promptUser();
 
 function viewEmployees() {
   console.log("view employee")
-  connection.query('SELECT employee.firstName, employee.lastName, role.title, role.salary,department.departmentName FROM employee LEFT JOIN role ON employee.roleID = role.id join department ON role.id = department.id;', function (err, res) {
+  const query =  `SELECT 
+                    e.firstName,
+                     e.lastName, 
+                     r.title, 
+                     r.salary,
+                     d.departmentName
+                  FROM employee e
+                  JOIN role r ON e.roleID = r.id 
+                  JOIN department d ON r.id = d.id;`;
+ // const query = `select employee.firstName, employee.lastName, role.title, role.salary, department.departmentName from Employee; `;
+  connection.query(query, function (err, res) {
     console.table(res)
     promptUser();
   });
@@ -159,10 +172,7 @@ function addRole(){
               for (let i = 0; i < choiceArray.length; i++) {
                   depNameArray[i] = choiceArray[i].departmentName;
                }
-              // choiceArray.forEach(( departmentName ) => {
-              //   depNameArray.push(departmentName);
-              // });
-              console.log(depNameArray);
+           
               return depNameArray;
             },
             message: 'Choose departement:',
@@ -171,23 +181,20 @@ function addRole(){
         ])
         .then((response) => {
            const query = 'insert into role(title, salary, department_id) values (?,?,?);';
-          //  if (response.options){
-            
-          //  }
+    
           const depChoice = choiceArray.filter(obj => {
             return obj.departmentName === response.options;
           });
-          console.log( depChoice);
-           connection.query(query, [ response.title,  response.salary, depChoice.id], (err, res) => {
+          console.log(depChoice);
+          console.log( depChoice[0].id);
+          connection.query(query, [ response.title,  response.salary, depChoice[0].id], (err, res) => {
             console.table(response);
             promptUser();
           });
        });
   });
 
- // });
 
- // promptU();
 }
 
 function viewDepartment(){
