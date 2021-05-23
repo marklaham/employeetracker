@@ -185,8 +185,8 @@ function addRole(){
           const depChoice = choiceArray.filter(obj => {
             return obj.departmentName === response.options;
           });
-          console.log(depChoice);
-          console.log( depChoice[0].id);
+          //console.log(depChoice);
+          //console.log( depChoice[0].id);
           connection.query(query, [ response.title,  response.salary, depChoice[0].id], (err, res) => {
             console.table(response);
             promptUser();
@@ -214,44 +214,69 @@ function viewRoles(){
 }
 
 function updateEmployee() {
-  console.log("adding employee")
+  console.log("Updating an employee role")
   connection.query('SELECT * FROM employee', function (err, res) {
-    console.table(res)
-  });
+    console.log(res);
+    if (err) throw err;
+    const empArray = [];
+  //  const promptU = () => {
+     inquirer.prompt([
+        // {
+        //   type: 'input',
+        //   name: 'title',
+        //   message: 'What is the the role title?',
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'salary',
+        //   message: 'What is the salary?',
+        // },
+        {
+          type: 'list',
+          name: 'options',
+          choices() {
+            
+            res.forEach(({roleID, firstName, lastName }) => {
+              empArray.push({ 'roleID': roleID , "firstName": firstName, "lastName": lastName});
+            });
+            console.log(empArray);
+            const empListArray = [];
+            for (let i = 0; i < empArray.length; i++) {
+                empListArray[i] = `${empArray[i].roleID}  ${empArray[i].firstName} ${empArray[i].lastName}`;  //.departmentName
+             }
+         
+            return empListArray;
+          },
+          message: 'Choose the employee you wish to update:',
+        },
+         {
+          type: 'input',
+          name: 'newRole',
+          message: 'What is their new role ID?',
+        },
+      
+      ])
+      .then((response) => {
+
+        const choiceID = empArray.filter(obj => {
+             return obj.id === response.id;
+        });
+        console.log(choiceID);
+
+         const query = `UPDATE employeetrackerdb.employee SET roleID = ${response.newRole} WHERE id = ${choiceID}`;
+        // const depChoice = choiceArray.filter(obj => {
+        //   return obj.departmentName === response.options;
+        // });
+        //console.log(depChoice);
+        //console.log( depChoice[0].id);
+        connection.query(query,  (err, res) => {
+          console.table(response);
+          promptUser();
+        });
+     });
+});
 }
 
 
 
 
-
-
-
-
-
-
-    // for (let i = 0; i < res.length; i++) {
-    //  
-    // }
-
-    //const empdata = res.
-
-  //  const empdata = res.map( (data) => {
-  //       data.get({ plain: true })
-  //     ;});
-  //  console.log("empdata:" + empdata );
-
-
-
-    // res.forEach(({ departmentName, id }) => 
-    //     departmentList.push( {"departmentName" : `${departmentName}` , "id": `${id}`})
-    // )
-
-  //   const dishData = await Dish.findAll();
-  //   console.log(dishData);
-  //   // We use .get({ plain: true }) on the object to serialize it so that it only includes the data that we need. 
-  //   const dishes = dishData.map( (dish) => {
-  //     dish.get({ plain: true });});
-
- //  });
-
-//  departmentList.unshift(new inquirer.Separator());
