@@ -65,13 +65,13 @@ function viewEmployees() {
   console.log("view employee")
   const query =  `SELECT 
                     e.firstName,
-                     e.lastName, 
-                     r.title, 
-                     r.salary,
-                     d.departmentName
-                  FROM employee e
-                  JOIN role r ON e.roleID = r.id 
-                  JOIN department d ON r.id = d.id;`;
+                    e.lastName, 
+                    r.title, 
+                    r.salary,
+                    d.departmentName
+                  FROM employeetrackerdb.employee e
+                  left JOIN employeetrackerdb.role r  ON e.roleID = r.id 
+                  left JOIN employeetrackerdb.department d  ON r.department_id = d.id;`;
  // const query = `select employee.firstName, employee.lastName, role.title, role.salary, department.departmentName from Employee; `;
   connection.query(query, function (err, res) {
     console.table(res)
@@ -119,7 +119,7 @@ function addEmployee(){
 
 
 function addDepartment(){
-  console.log("adding employee")
+  console.log("adding department")
 
   const promptU = () => {
     return inquirer.prompt([
@@ -144,10 +144,9 @@ function addDepartment(){
 function addRole(){
 
   connection.query('SELECT * FROM department', function (err, res) {
-      console.log(res);
+   
       if (err) throw err;
 
-    //  const promptU = () => {
        inquirer.prompt([
           {
             type: 'input',
@@ -185,8 +184,7 @@ function addRole(){
           const depChoice = choiceArray.filter(obj => {
             return obj.departmentName === response.options;
           });
-          //console.log(depChoice);
-          //console.log( depChoice[0].id);
+        
           connection.query(query, [ response.title,  response.salary, depChoice[0].id], (err, res) => {
             console.table(response);
             promptUser();
@@ -218,65 +216,54 @@ function updateEmployee() {
   connection.query('SELECT * FROM employee', function (err, res) {
     console.log(res);
     if (err) throw err;
-    const empArray = [];
-  //  const promptU = () => {
+
+    const empArray = res.map(function (emp){
+          return {
+            name: `${emp.firstName } ${emp.lastName }`,
+            value: emp.id,
+          }
+    });
+  
      inquirer.prompt([
-        // {
-        //   type: 'input',
-        //   name: 'title',
-        //   message: 'What is the the role title?',
-        // },
-        // {
-        //   type: 'input',
-        //   name: 'salary',
-        //   message: 'What is the salary?',
-        // },
+     
         {
           type: 'list',
           name: 'options',
-          choices() {
-            
-            res.forEach(({roleID, firstName, lastName }) => {
-              empArray.push({ 'roleID': roleID , "firstName": firstName, "lastName": lastName});
-            });
-            console.log(empArray);
-            const empListArray = [];
-            for (let i = 0; i < empArray.length; i++) {
-                empListArray[i] = `${empArray[i].roleID}  ${empArray[i].firstName} ${empArray[i].lastName}`;  //.departmentName
-             }
-         
-            return empListArray;
-          },
+          choices: empArray,
           message: 'Choose the employee you wish to update:',
         },
-         {
-          type: 'input',
-          name: 'newRole',
-          message: 'What is their new role ID?',
-        },
-      
       ])
       .then((response) => {
-
-        const choiceID = empArray.filter(obj => {
-             return obj.id === response.id;
-        });
-        console.log(choiceID);
-
-         const query = `UPDATE employeetrackerdb.employee SET roleID = ${response.newRole} WHERE id = ${choiceID}`;
-        // const depChoice = choiceArray.filter(obj => {
-        //   return obj.departmentName === response.options;
-        // });
-        //console.log(depChoice);
-        //console.log( depChoice[0].id);
-        connection.query(query,  (err, res) => {
-          console.table(response);
-          promptUser();
-        });
-     });
-});
+        connection.query('SELECT * FROM role', function (err, res) {
+          //console.log(res);
+          if (err) throw err;
+          const choiceArray = res.map( function (role) {
+            return  {
+                value: role.id,
+                name: role.title,
+              };
+          });
+          inquirer.prompt([
+     
+            {
+              type: 'list',
+              name: 'options',
+              choices: choiceArray,
+              message: 'Choose the employee you wish to update:',
+            },
+          ])
+          .then ((roleAnswer) => {
+            const query = `UPDATE employeetrackerdb.employee SET roleID = ${roleAnswer.options} WHERE id = ${response.options}`;
+            connection.query(query,  (err, res) => {
+              console.table(response);
+              promptUser();
+            });
+          }); 
+       
+      });
+    });
+  });
 }
-
 
 
 
